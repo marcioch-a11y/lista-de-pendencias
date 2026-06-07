@@ -1,0 +1,12 @@
+# Secret files
+token.json
+credentials.json
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Local system artifacts
+.system_generated/
+*.log

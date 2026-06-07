@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amaya Agro & Ribeira ML - Andon Sync Manager</title>
+    <!-- Importa a fonte Outfit do Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(20, 30, 55, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --terminal-bg: #030712;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #070a13 0%, #111827 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Container principal */
+        .app-container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Top Bar */
+        header {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .brand-info h1 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-info p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .network-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .network-badge::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-blue);
+            animation: pulse 2s infinite;
+        }
+
+        /* Grid de Conteúdo */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 800px) {
+            .content-grid {
+                grid-template-columns: 1.2fr 1.8fr;
+            }
+        }
+
+        .content-grid.hidden {
+            display: none !important;
+        }
+
+        /* Cards Principais */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Controles de Configuração */
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .toggle-container {
+            display: flex;
+            background: #111b30;
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid var(--card-border);
+        }
+
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Botões de Ação */
+        .sync-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-to-sheets {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+
+        .btn-to-sheets:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-to-tasks {
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
+        }
+
+        .btn-to-tasks:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn:disabled {
+            background: #475569 !important;
+            transform: none !important;
+            cursor: not-allowed;
+            box-shadow: none !important;
+            opacity: 0.6;
+        }
+
+        /* Editor de Base de Dados */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            height: 380px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            color: #e2e8f0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .editor-textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .btn-save {
+            background: #334155;
+            align-self: flex-end;
+            padding: 10px 24px;
+            width: auto;
+        }
+
+        .btn-save:hover {
+            background: #475569;
+            transform: translateY(-1px);
+        }
+
+        /* Console Terminal */
+        .terminal-container {
+            background-color: var(--terminal-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .terminal-body {
+            height: 180px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        }
+
+        /* Animações e Status */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Estilos dos Cards e Tabela de Tarefa */
+        table {
+            border-spacing: 0;
+            width: 100%;
+            min-width: 1200px;
+        }
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: middle;
+            text-align: left;
+        }
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        .project-group-header td {
+            background: rgba(59, 130, 246, 0.08) !important;
+            color: #93c5fd;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            border-top: 1px solid rgba(59, 130, 246, 0.1);
+            padding: 10px 16px;
+        }
+
+        .project-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        /* Cores de Prioridade */
+        .priority-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .priority-1 { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .priority-2 { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .priority-3 { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-align: center;
+            display: inline-block;
+        }
+        .status-ongoing {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+        .status-done {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+        .status-blocked {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        .table-input, .table-select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        .table-input:focus, .table-select:focus {
+            border-color: var(--accent-blue);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Custom Multiselect styles */
+        .multiselect-container {
+            position: relative;
+            width: 100%;
+        }
+        .multiselect-btn {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .multiselect-btn:after {
+            content: "▼";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+        .multiselect-btn:focus {
+            border-color: var(--accent-blue);
+        }
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .multiselect-dropdown.hidden {
+            display: none;
+        }
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+        }
+        .multiselect-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .multiselect-option input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="brand-info">
+                <h1>Amaya Agro & Ribeira ML</h1>
+                <p>Quadro Andon - Central de Sincronização Inteligente</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button class="toggle-btn" id="toggleConfigBtn" onclick="toggleConfigPanel()" style="padding: 8px 16px; border: 1px solid var(--card-border); background: rgba(255,255,255,0.05); color: white; display: flex; align-items: center; gap: 6px;">
+                    ⚙️ Configurações & Controles
+                </button>
+                <div class="network-badge" id="localIpLabel">
+                    Buscando rede...
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="content-grid hidden" id="configGrid">
+            <!-- Coluna de Ações -->
+            <div class="card">
+                <h2>⚡ Controles Rápidos</h2>
+                
+                <!-- Toggle do Provedor de IA -->
+                <div class="config-row">
+                    <span>Provedor de IA</span>
+                    <div class="toggle-container">
+                        <button class="toggle-btn" id="providerGemini" onclick="setProvider('gemini')">Gemini</button>
+                        <button class="toggle-btn" id="providerLocal" onclick="setProvider('local')">Local LLM</button>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="sync-buttons">
+                    <button class="btn btn-to-sheets" id="btnSyncToSheets" onclick="runSyncToSheets()">
+                        <div class="spinner" id="spinnerToSheets"></div>
+                        <span>📥 Importar para Planilha</span>
+                    </button>
+                    <button class="btn btn-to-tasks" id="btnSyncToTasks" onclick="runSyncToTasks()">
+                        <div class="spinner" id="spinnerToTasks"></div>
+                        <span>📤 Sincronizar p/ Google Tasks</span>
+                    </button>
+                </div>
+
+                <!-- Terminal Log -->
+                <div class="terminal-container">
+                    <div class="terminal-header">
+                        <span>Terminal Log</span>
+                        <span id="logTime">Pronto</span>
+                    </div>
+                    <div class="terminal-body" id="terminalLog">Aguardando execução...</div>
+                </div>
+            </div>
+
+            <!-- Coluna do Editor da Base de Dados -->
+            <div class="card">
+                <h2>📝 Base de Dados Master (base_de_dados.md)</h2>
+                <div class="editor-container">
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">
+                        Edite as associações de projetos, equipe e palavras-chave. As alterações se aplicam instantaneamente na próxima sincronização.
+                    </p>
+                    <textarea class="editor-textarea" id="dbContent" placeholder="Carregando Base de Dados..."></textarea>
+                    <button class="btn btn-save" onclick="saveDatabase()">💾 Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Pendências (Tabela) -->
+        <div class="card" style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 12px; flex-wrap: wrap; gap: 15px;">
+                <h2 style="border: none; padding: 0; margin: 0;">📋 Quadro de Pendências Ativas</h2>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <!-- Ações de Lote -->
+                    <button class="toggle-btn" onclick="addNewPendingRow()" style="padding: 8px 16px; border: 1px solid var(--accent-green); color: #6ee7b7; background: rgba(16,185,129,0.1); display: flex; align-items: center; gap: 6px;">
+                        ➕ Adicionar Pendência
+                    </button>
+                    <button class="toggle-btn active" id="btnSaveAll" onclick="saveAllChanges()" style="padding: 8px 16px; background: var(--accent-blue); display: flex; align-items: center; gap: 6px;">
+                        💾 Salvar Todas as Alterações
+                    </button>
+                    
+                    <!-- Dropdown de Projetos -->
+                    <select id="projectFilter" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
+                        <option value="all">Todos os Projetos</option>
+                    </select>
+                    <!-- Campo de Busca -->
+                    <input type="text" id="taskSearch" placeholder="🔍 Buscar por Assunto..." oninput="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; width: 200px;">
+                    <!-- Agrupador -->
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-secondary);">
+                        <label for="groupBy" style="cursor: pointer; user-select: none;">Agrupar por:</label>
+                        <select id="groupBy" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
+                            <option value="none">Sem Agrupamento</option>
+                            <option value="Projeto">Projeto</option>
+                            <option value="Assunto">Assunto</option>
+                            <option value="Responsável">Responsável</option>
+                        </select>
+                    </div>
+                    <!-- Ordenação -->
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-secondary);">
+                        <label for="sortBy" style="cursor: pointer; user-select: none;">Ordenar por:</label>
+                        <select id="sortBy" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
+                            <option value="none">Padrão</option>
+                            <option value="due_date">Data de Entrega (Due Date)</option>
+                            <option value="prioridade">Prioridade</option>
+                            <option value="Assunto">Assunto</option>
+                        </select>
+                    </div>
+                    <button class="toggle-btn active" onclick="loadTasks()" style="padding: 8px 16px;">🔄 Atualizar</button>
+                </div>
+            </div>
+            
+            <div style="overflow-x: auto; margin-top: 10px; border: 1px solid var(--card-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
+                <table id="tasksTable">
+                    <thead>
+                        <tr style="background: rgba(255,255,255,0.02); color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">
+                            <th style="padding: 14px 12px; width: 12%; min-width: 120px;">Assunto</th>
+                            <th style="padding: 14px 12px; width: 12%; min-width: 120px;">Projeto</th>
+                            <th style="padding: 14px 12px; width: 48%; min-width: 480px;">Problema/contramedida</th>
+                            <th style="padding: 14px 12px; width: 10%; min-width: 105px;">Responsável</th>
+                            <th style="padding: 14px 12px; width: 95px;">Due Date</th>
+                            <th style="padding: 14px 12px; width: 45px; text-align: center;">Prio</th>
+                            <th style="padding: 14px 12px; width: 55px; text-align: center;">Status</th>
+                            <th style="padding: 14px 12px; width: 45px; text-align: center;">Concluir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 30px;">Carregando tarefas...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let localTasksList = []; // Cache local para busca instantânea
+
+        // Função para formatar a hora nos logs
+        function getFormattedTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('pt-BR');
+        }
+
+        // Carrega as informações iniciais de status, endereço IP e tarefas
+        function loadStatus() {
+            fetch("/api/status")
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById("localIpLabel").textContent = `IP Rede: ${data.local_ip}:5080`;
+                    
+                    if (data.provider === "local") {
+                        document.getElementById("providerLocal").classList.add("active");
+                        document.getElementById("providerGemini").classList.remove("active");
+                    } else {
+                        document.getElementById("providerGemini").classList.add("active");
+                        document.getElementById("providerLocal").classList.remove("active");
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao ler status inicial:", err);
+                    document.getElementById("localIpLabel").textContent = "Erro de Conexão";
+                });
+
+            // Carrega o arquivo da base de dados no editor
+            fetch("/api/base-de-dados")
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById("dbContent").value = data.content;
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar base de dados:", err);
+                });
+
+            // Carrega tarefas da planilha
+            loadTasks();
+        }
+
+        let optionsCache = { projetos: [], assuntos: [], responsaveis: [] };
+
+        // Carrega as opções das abas auxiliares da planilha
+        function loadOptions() {
+            return fetch("/api/options")
+                .then(r => r.json())
+                .then(data => {
+                    optionsCache = data;
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar opções:", err);
+                });
+        }
+
+        // Carrega as tarefas do Sheets
+        function loadTasks() {
+            const tbody = document.getElementById("tasksTableBody");
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 30px;">Atualizando quadro de tarefas...</td></tr>';
+            
+            loadOptions().then(() => {
+                fetch("/api/tasks")
+                    .then(r => r.json())
+                    .then(data => {
+                        // Filtra as pendências que NÃO estão concluídas
+                        localTasksList = data.filter(t => {
+                            const conc = (t.concluido || "").toString().toLowerCase().trim();
+                            return conc !== "sim";
+                        });
+                        populateProjectFilter(localTasksList);
+                        renderTasks(localTasksList);
+                    })
+                    .catch(err => {
+                        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-red); padding: 30px;">Erro ao carregar tarefas: ${err}</td></tr>`;
+                    });
+            });
+        }
+
+        // Preenche o dropdown de projetos dinamicamente
+        function populateProjectFilter(tasks) {
+            const filter = document.getElementById("projectFilter");
+            const currentValue = filter.value;
+            
+            // Pega projetos únicos
+            const projects = new Set();
+            tasks.forEach(t => {
+                if (t.Projeto && t.Projeto.trim()) {
+                    projects.add(t.Projeto.trim());
+                }
+            });
+            
+            filter.innerHTML = '<option value="all">Todos os Projetos</option>';
+            filter.innerHTML += '<option value="none">[Sem Projeto]</option>';
+            
+            Array.from(projects).sort().forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p;
+                opt.textContent = p;
+                filter.appendChild(opt);
+            });
+            
+            // Restaura valor se ainda existir
+            if (currentValue && filter.querySelector(`option[value="${currentValue}"]`)) {
+                filter.value = currentValue;
+            }
+        }
+
+        // Converte data formato brasileiro DD/MM/YYYY para ISO YYYY-MM-DD
+        function formatBRToISO(dateStr) {
+            if (!dateStr || !dateStr.toString().trim()) return "";
+            const dmyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+            const match = dateStr.toString().trim().match(dmyPattern);
+            if (match) {
+                const day = match[1].padStart(2, "0");
+                const month = match[2].padStart(2, "0");
+                const year = match[3];
+                return `${year}-${month}-${day}`;
+            }
+            return dateStr;
+        }
+
+        // Converte data formato ISO YYYY-MM-DD para brasileiro DD/MM/YYYY
+        function formatISOToBR(dateStr) {
+            if (!dateStr || !dateStr.toString().trim()) return "";
+            const ymdPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+            const match = dateStr.toString().trim().match(ymdPattern);
+            if (match) {
+                return `${match[3]}/${match[2]}/${match[1]}`;
+            }
+            return dateStr;
+        }
+
+        // Função auxiliar para analisar e converter datas no formato DD/MM/YYYY ou ISO para objeto Date
+        function parseDate(dateStr) {
+            if (!dateStr) return new Date(8640000000000000); // Sem data fica no fim da lista
+            
+            const dmyPattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+            const dmyMatch = dateStr.toString().trim().match(dmyPattern);
+            if (dmyMatch) {
+                return new Date(parseInt(dmyMatch[3]), parseInt(dmyMatch[2]) - 1, parseInt(dmyMatch[1]));
+            }
+            
+            const parsed = Date.parse(dateStr);
+            if (!isNaN(parsed)) {
+                return new Date(parsed);
+            }
+            
+            return new Date(8640000000000000);
+        }
+
+        // Gera HTML do dropdown com a opção extra de cadastrar novo
+        function makeSelectHtml(optionsList, currentValue, type, taskId) {
+            let html = `<select class="table-select col-${type}" onchange="handleSelectChange(this, '${type}', '${taskId}')">`;
+            html += `<option value="">[Vazio]</option>`;
+            optionsList.forEach(opt => {
+                const selected = opt === currentValue ? "selected" : "";
+                html += `<option value="${opt}" ${selected}>${opt}</option>`;
+            });
+            const titleMap = {
+                "projeto": "[+] Novo Projeto...",
+                "assunto": "[+] Novo Assunto..."
+            };
+            html += `<option value="__new__" style="color: var(--accent-green); font-weight: bold;">${titleMap[type]}</option>`;
+            html += `</select>`;
+            return html;
+        }
+
+        // Gera o HTML do widget de multi-seleção de responsáveis
+        function makeMultiselectHtml(optionsList, currentValue, taskId) {
+            const selectedNames = currentValue ? currentValue.split(",").map(n => n.trim()) : [];
+            let html = `<div class="multiselect-container" data-task-id="${taskId}">`;
+            let displayLabel = selectedNames.length > 0 ? selectedNames.join(", ") : "[Vazio]";
+            html += `<button class="multiselect-btn" onclick="toggleMultiselect(this, event)">${displayLabel}</button>`;
+            html += `<div class="multiselect-dropdown hidden" onclick="event.stopPropagation()">`;
+            
+            optionsList.forEach(opt => {
+                const checked = selectedNames.includes(opt) ? "checked" : "";
+                html += `
+                <label class="multiselect-option">
+                    <input type="checkbox" value="${opt}" ${checked} onchange="updateMultiselectDisplay(this)">
+                    <span>${opt}</span>
+                </label>
+                `;
+            });
+            
+            html += `
+            <button class="toggle-btn" onclick="addNewOptionFromMultiselect(this, '${taskId}')" style="padding: 6px; font-size: 0.8rem; margin-top: 4px; width: 100%; border: 1px solid var(--card-border); text-align: center; color: var(--accent-green);">
+                [+] Novo Responsável...
+            </button>
+            `;
+            html += `</div></div>`;
+            return html;
+        }
+
+        // Controla a exibição do dropdown de multi-seleção
+        function toggleMultiselect(btn, event) {
+            event.stopPropagation();
+            const dropdown = btn.nextElementSibling;
+            const wasHidden = dropdown.classList.contains("hidden");
+            
+            // Fecha todas as outras caixas abertas
+            document.querySelectorAll(".multiselect-dropdown").forEach(el => {
+                el.classList.add("hidden");
+            });
+            
+            if (wasHidden) {
+                dropdown.classList.remove("hidden");
+            }
+        }
+
+        // Atualiza a exibição de nomes no botão após marcar/desmarcar
+        function updateMultiselectDisplay(checkbox) {
+            const container = checkbox.closest(".multiselect-container");
+            const btn = container.querySelector(".multiselect-btn");
+            const checkboxes = container.querySelectorAll(".multiselect-dropdown input[type='checkbox']");
+            const selected = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selected.push(cb.value);
+            });
+            btn.textContent = selected.length > 0 ? selected.join(", ") : "[Vazio]";
+        }
+
+        // Fecha caixas de multi-seleção se o usuário clicar fora
+        document.addEventListener("click", function() {
+            document.querySelectorAll(".multiselect-dropdown").forEach(el => {
+                el.classList.add("hidden");
+            });
+        });
+
+        // Adiciona um novo responsável a partir do multiselect
+        function addNewOptionFromMultiselect(btn, taskId) {
+            const newVal = prompt("Digite o nome do Novo Responsável:");
+            if (newVal && newVal.trim()) {
+                fetch("/api/options/add", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ tipo: "responsavel", valor: newVal.trim() })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        logToTerminal(`Responsável '${newVal}' adicionado com sucesso!`);
+                        loadOptions().then(() => {
+                            loadTasks();
+                        });
+                    } else {
+                        alert("Erro ao adicionar: " + data.error);
+                    }
+                })
+                .catch(err => alert("Erro de rede: " + err));
+            }
+        }
+
+        // Atualiza a cor de fundo e borda do select de status conforme o valor selecionado
+        function updateStatusColor(selectEl) {
+            const val = selectEl.value;
+            if (val === "O") {
+                selectEl.style.background = "rgba(16, 185, 129, 0.15)";
+                selectEl.style.color = "#6ee7b7";
+                selectEl.style.borderColor = "rgba(16, 185, 129, 0.3)";
+            } else if (val === "X") {
+                selectEl.style.background = "rgba(239, 68, 68, 0.15)";
+                selectEl.style.color = "#fca5a5";
+                selectEl.style.borderColor = "rgba(239, 68, 68, 0.3)";
+            } else {
+                selectEl.style.background = "rgba(245, 158, 11, 0.15)";
+                selectEl.style.color = "#fcd34d";
+                selectEl.style.borderColor = "rgba(245, 158, 11, 0.3)";
+            }
+        }
+
+        // Gera HTML do dropdown de status
+        function makeStatusSelectHtml(currentValue) {
+            let bg = "rgba(245, 158, 11, 0.15)";
+            let color = "#fcd34d";
+            let border = "rgba(245, 158, 11, 0.3)";
+            
+            if (currentValue === "O") {
+                bg = "rgba(16, 185, 129, 0.15)";
+                color = "#6ee7b7";
+                border = "rgba(16, 185, 129, 0.3)";
+            } else if (currentValue === "X") {
+                bg = "rgba(239, 68, 68, 0.15)";
+                color = "#fca5a5";
+                border = "rgba(239, 68, 68, 0.3)";
+            }
+
+            return `
+            <select class="table-select col-status" onchange="updateStatusColor(this)" style="background: ${bg}; color: ${color}; border-color: ${border}; font-weight: bold; text-align: center; width: 55px; padding: 8px 2px;">
+                <option value="△" ${currentValue === "△" ? "selected" : ""}>△</option>
+                <option value="O" ${currentValue === "O" ? "selected" : ""}>O</option>
+                <option value="X" ${currentValue === "X" ? "selected" : ""}>X</option>
+            </select>
+            `;
+        }
+
+        // Gera HTML do dropdown de prioridade
+        function makePrioritySelectHtml(currentValue) {
+            const cleaned = (currentValue || "").toString().replace(/\D/g, "");
+            const val = parseInt(cleaned) || 2;
+            return `
+            <select class="table-select col-prioridade" style="text-align: center; width: 45px; padding: 8px 2px;">
+                <option value="1" ${val === 1 ? "selected" : ""}>1</option>
+                <option value="2" ${val === 2 ? "selected" : ""}>2</option>
+                <option value="3" ${val === 3 ? "selected" : ""}>3</option>
+            </select>
+            `;
+        }
+
+        // Trata a seleção de cadastro rápido de nova opção nos selects padrões
+        function handleSelectChange(selectEl, type, taskId) {
+            if (selectEl.value === "__new__") {
+                const titleMap = {
+                    "projeto": "Novo Projeto",
+                    "assunto": "Novo Assunto"
+                };
+                const newVal = prompt(`Digite o nome do ${titleMap[type]}:`);
+                if (newVal && newVal.trim()) {
+                    fetch("/api/options/add", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ tipo: type, valor: newVal.trim() })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            logToTerminal(`${titleMap[type]} '${newVal}' adicionado com sucesso!`);
+                            loadOptions().then(() => {
+                                loadTasks();
+                            });
+                        } else {
+                            alert("Erro ao adicionar: " + data.error);
+                            selectEl.value = "";
+                        }
+                    })
+                    .catch(err => {
+                        alert("Erro de rede: " + err);
+                        selectEl.value = "";
+                    });
+                } else {
+                    selectEl.value = "";
+                }
+            }
+        }
+
+        // Adiciona uma nova linha de pendência vazia no topo da tabela
+        function addNewPendingRow() {
+            const tbody = document.getElementById("tasksTableBody");
+            const tempId = "NEW_" + Date.now();
+            const mockTask = {
+                "Assunto": "",
+                "Projeto": "",
+                "Problema/contramedida": "",
+                "Responsável": "",
+                "Due Date": "",
+                "prioridade": "2",
+                "Status": "△",
+                "ID Tarefa": tempId
+            };
+            
+            if (tbody.children.length === 1 && tbody.children[0].cells.length === 1) {
+                tbody.innerHTML = "";
+            }
+            
+            const newRow = createRow(mockTask);
+            tbody.insertBefore(newRow, tbody.firstChild);
+            logToTerminal("Nova pendência adicionada no topo! Lembre-se de clicar em 'Salvar Todas as Alterações'.");
+        }
+
+        // Envia todas as linhas editadas/novas em massa para a planilha
+        function saveAllChanges() {
+            const btn = document.getElementById("btnSaveAll");
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Salvando...";
+            btn.disabled = true;
+            
+            const rows = document.querySelectorAll("#tasksTableBody tr");
+            const tasksToUpdate = [];
+            
+            rows.forEach(rowEl => {
+                if (rowEl.classList.contains("project-group-header")) return;
+                
+                const taskId = rowEl.getAttribute("data-task-id");
+                if (!taskId) return;
+                
+                // Coleta os múltiplos responsáveis marcados nas checkboxes
+                const selectedResps = [];
+                rowEl.querySelectorAll(".multiselect-dropdown input[type='checkbox']").forEach(cb => {
+                    if (cb.checked) selectedResps.push(cb.value);
+                });
+                
+                const dueISO = rowEl.querySelector(".col-due").value;
+                const dueBR = formatISOToBR(dueISO);
+                
+                const taskData = {
+                    "ID Tarefa": taskId,
+                    "Assunto": rowEl.querySelector(".col-assunto").value,
+                    "Projeto": rowEl.querySelector(".col-projeto").value,
+                    "Problema/contramedida": rowEl.querySelector(".col-problema").value,
+                    "Responsável": selectedResps.join(", "),
+                    "Due Date": dueBR,
+                    "prioridade": rowEl.querySelector(".col-prioridade").value,
+                    "Status": rowEl.querySelector(".col-status").value
+                };
+                tasksToUpdate.push(taskData);
+            });
+            
+            logToTerminal("Enviando alterações em lote para a planilha...");
+            
+            fetch("/api/tasks/bulk-update", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tasks: tasksToUpdate })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if (data.success) {
+                    logToTerminal("Quadro de pendências salvo com sucesso na planilha!");
+                    loadTasks();
+                    alert("Todas as alterações foram gravadas com sucesso!");
+                } else {
+                    alert("Erro ao salvar alterações: " + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert("Erro de rede ao salvar: " + err);
+            });
+        }
+
+        // Renderiza a tabela de tarefas na tela
+        function renderTasks(tasks) {
+            const tbody = document.getElementById("tasksTableBody");
+            tbody.innerHTML = "";
+            
+            if (tasks.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhuma pendência ativa correspondente aos filtros.</td></tr>';
+                return;
+            }
+
+            // 1. Ordenação (Sort)
+            const sortBy = document.getElementById("sortBy").value;
+            if (sortBy !== "none") {
+                tasks.sort((a, b) => {
+                    if (sortBy === "due_date") {
+                        return parseDate(a["Due Date"]) - parseDate(b["Due Date"]);
+                    } else if (sortBy === "prioridade") {
+                        const prioA = parseInt(a.prioridade) || 999;
+                        const prioB = parseInt(b.prioridade) || 999;
+                        return prioA - prioB;
+                    } else if (sortBy === "Assunto") {
+                        const valA = (a.Assunto || "").toString().toLowerCase();
+                        const valB = (b.Assunto || "").toString().toLowerCase();
+                        return valA.localeCompare(valB, 'pt-BR');
+                    }
+                    return 0;
+                });
+            }
+
+            // 2. Agrupamento (Group By)
+            const groupBy = document.getElementById("groupBy").value;
+
+            if (groupBy !== "none") {
+                const groups = {};
+                tasks.forEach(t => {
+                    let groupKey = "";
+                    if (groupBy === "Projeto") {
+                        groupKey = t.Projeto && t.Projeto.trim() ? t.Projeto.trim() : "[Sem Projeto]";
+                    } else if (groupBy === "Assunto") {
+                        groupKey = t.Assunto && t.Assunto.trim() ? t.Assunto.trim() : "[Sem Assunto]";
+                    } else if (groupBy === "Responsável") {
+                        groupKey = t.Responsável && t.Responsável.trim() ? t.Responsável.trim() : "[Sem Responsável]";
+                    } else {
+                        groupKey = "[Indefinido]";
+                    }
+                    
+                    if (!groups[groupKey]) groups[groupKey] = [];
+                    groups[groupKey].push(t);
+                });
+
+                // Renderiza cada grupo
+                Object.keys(groups).sort((a, b) => a.localeCompare(b, 'pt-BR')).forEach(key => {
+                    const groupTasks = groups[key];
+                    
+                    // Linha Header do Grupo
+                    const groupHeader = document.createElement("tr");
+                    groupHeader.className = "project-group-header";
+                    let emoji = "📁";
+                    if (groupBy === "Assunto") emoji = "🏷️";
+                    if (groupBy === "Responsável") emoji = "👤";
+                    
+                    groupHeader.innerHTML = `<td colspan="8">${emoji} ${key} (${groupTasks.length} pendência(s))</td>`;
+                    tbody.appendChild(groupHeader);
+                    
+                    // Linhas do grupo
+                    groupTasks.forEach(t => {
+                        tbody.appendChild(createRow(t));
+                    });
+                });
+            } else {
+                // Renderização Plana
+                tasks.forEach(t => {
+                    tbody.appendChild(createRow(t));
+                });
+            }
+        }
+
+        // Cria uma linha <tr> da tabela para a tarefa
+        function createRow(task) {
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-task-id", task["ID Tarefa"]);
+
+            const selectAssunto = makeSelectHtml(optionsCache.assuntos, task.Assunto, "assunto", task["ID Tarefa"]);
+            const selectProjeto = makeSelectHtml(optionsCache.projetos, task.Projeto, "projeto", task["ID Tarefa"]);
+            const selectResp = makeMultiselectHtml(optionsCache.responsaveis, task.Responsável, task["ID Tarefa"]);
+            
+            const inputProblema = `<input type="text" class="table-input col-problema" value="${task["Problema/contramedida"] || ""}">`;
+            
+            const isoDate = formatBRToISO(task["Due Date"]);
+            const inputDue = `<input type="date" class="table-input col-due" value="${isoDate}" style="width: 115px; padding: 8px 6px;">`;
+            
+            const selectPrio = makePrioritySelectHtml(task.prioridade);
+            const selectStatus = makeStatusSelectHtml(task.Status);
+
+            const concluirBtn = `
+                <button class="toggle-btn btn-concluir-row" onclick="concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" style="padding: 3px 6px; font-size: 0.7rem; margin: 0 auto; display: block; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
+                    ✔
+                </button>
+            `;
+
+            tr.innerHTML = `
+                <td>${selectAssunto}</td>
+                <td>${selectProjeto}</td>
+                <td>${inputProblema}</td>
+                <td>${selectResp}</td>
+                <td>${inputDue}</td>
+                <td style="text-align: center;">${selectPrio}</td>
+                <td style="text-align: center;">${selectStatus}</td>
+                <td style="text-align: center;">${concluirBtn}</td>
+            `;
+            return tr;
+        }
+
+        // Marca a pendência como concluída no Sheets e oculta da lista
+        function concluirRow(taskId, rowEl) {
+            if (taskId.startsWith("NEW_")) {
+                rowEl.style.transition = "all 0.5s ease";
+                rowEl.style.opacity = 0;
+                setTimeout(() => rowEl.remove(), 500);
+                logToTerminal("Nova pendência não salva removida do quadro.");
+                return;
+            }
+            
+            if (confirm("Tem certeza que deseja concluir esta pendência? Ela ficará invisível na lista.")) {
+                fetch("/api/tasks/concluir", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: taskId })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        logToTerminal("Pendência marcada como Concluída no Sheets!");
+                        rowEl.style.transition = "all 0.5s ease";
+                        rowEl.style.opacity = 0;
+                        setTimeout(() => {
+                            rowEl.remove();
+                            localTasksList = localTasksList.filter(t => t["ID Tarefa"] !== taskId);
+                        }, 500);
+                    } else {
+                        alert("Erro ao concluir: " + data.error);
+                    }
+                })
+                .catch(err => alert("Erro de rede: " + err));
+            }
+        }
+
+        // Filtra as tarefas
+        function filterTasks() {
+            const term = document.getElementById("taskSearch").value.toLowerCase().trim();
+            const projectSelected = document.getElementById("projectFilter").value;
+            
+            const filtered = localTasksList.filter(t => {
+                // 1. Filtro de Projeto
+                let passProject = true;
+                if (projectSelected === "none") {
+                    passProject = !t.Projeto || !t.Projeto.trim();
+                } else if (projectSelected !== "all") {
+                    passProject = t.Projeto && t.Projeto.trim() === projectSelected;
+                }
+                
+                // 2. Filtro de Texto (Busca Assunto)
+                let passSearch = true;
+                if (term) {
+                    passSearch = (t.Assunto && t.Assunto.toLowerCase().includes(term)) ||
+                                 (t["Problema/contramedida"] && t["Problema/contramedida"].toLowerCase().includes(term));
+                }
+                
+                return passProject && passSearch;
+            });
+            
+            renderTasks(filtered);
+        }
+
+        // Altera o provedor de IA (Gemini ou Local LLM)
+        function setProvider(provider) {
+            fetch("/api/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: provider })
+            })
+            .then(r => r.json())
+            .then(data => {
+                loadStatus();
+                logToTerminal(`Provedor de IA alterado para: ${provider.toUpperCase()}`);
+            })
+            .catch(err => {
+                logToTerminal(`Erro ao mudar provedor: ${err}`);
+            });
+        }
+
+        // Salva as alterações da base de dados
+        function saveDatabase() {
+            const content = document.getElementById("dbContent").value;
+            fetch("/api/base-de-dados", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ content: content })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    logToTerminal("Base de dados master salva com sucesso no disco!");
+                    alert("Base de Dados salva com sucesso!");
+                } else {
+                    logToTerminal(`Erro ao salvar: ${data.error}`);
+                }
+            })
+            .catch(err => {
+                logToTerminal(`Erro ao salvar base de dados: ${err}`);
+            });
+        }
+
+        // Auxiliar para imprimir no console virtual da página
+        function logToTerminal(text) {
+            const term = document.getElementById("terminalLog");
+            term.textContent = text;
+            document.getElementById("logTime").textContent = `Atualizado às ${getFormattedTime()}`;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Executa a importação: Google Tasks -> Sheets
+        function runSyncToSheets() {
+            const btn = document.getElementById("btnSyncToSheets");
+            const spinner = document.getElementById("spinnerToSheets");
+            
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+            logToTerminal("Conectando ao Google Tasks e analisando novos lançamentos...");
+            
+            fetch("/api/sync/to-sheets", { method: "POST" })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    spinner.style.display = "none";
+                    if (data.success) {
+                        logToTerminal(data.stdout || "Sincronização concluída com sucesso!");
+                        loadTasks(); // Atualiza a lista na tela
+                    } else {
+                        logToTerminal(`ERRO NA IMPORTAÇÃO:\n\n${data.stdout}\n${data.stderr}`);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    spinner.style.display = "none";
+                    logToTerminal(`Erro de rede: ${err}`);
+                });
+        }
+
+        // Executa a sincronização reversa: Sheets -> Google Tasks
+        function runSyncToTasks() {
+            const btn = document.getElementById("btnSyncToTasks");
+            const spinner = document.getElementById("spinnerToTasks");
+            
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+            logToTerminal("Lendo dados da planilha e atualizando tarefas no Google Tasks...");
+            
+            fetch("/api/sync/to-tasks", { method: "POST" })
+                .then(r => r.json())
+                .then(data => {
+                    btn.disabled = false;
+                    spinner.style.display = "none";
+                    if (data.success) {
+                        logToTerminal(data.stdout || "Sincronização reversa concluída com sucesso!");
+                        loadTasks(); // Atualiza a lista na tela
+                    } else {
+                        logToTerminal(`ERRO NA SINCRONIZAÇÃO REVERSA:\n\n${data.stdout}\n${data.stderr}`);
+                    }
+                })
+                .catch(err => {
+                    btn.disabled = false;
+                    spinner.style.display = "none";
+                    logToTerminal(`Erro de rede: ${err}`);
+                });
+        }
+
+        // Controla a visibilidade da seção de configurações/controles
+        function toggleConfigPanel() {
+            const grid = document.getElementById("configGrid");
+            const btn = document.getElementById("toggleConfigBtn");
+            grid.classList.toggle("hidden");
+            if (grid.classList.contains("hidden")) {
+                btn.classList.remove("active");
+                btn.style.background = "rgba(255,255,255,0.05)";
+            } else {
+                btn.classList.add("active");
+                btn.style.background = "var(--accent-blue)";
+            }
+        }
+
+        // Inicializa a página no carregamento
+        window.onload = loadStatus;
+    </script>
+</body>
+</html>
