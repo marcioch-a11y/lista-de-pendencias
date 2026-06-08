@@ -794,10 +794,20 @@
                 if (!localData) return false;
                 const projects = JSON.parse(localData);
                 if (!Array.isArray(projects)) return false;
-                const projName = projeto && projeto.trim() ? projeto.trim() : 'Sem Projeto';
-                const proj = projects.find(p => p.name === projName);
+                
+                const cleanProj = (projeto || "").toString().trim().toLowerCase() || "sem projeto";
+                const cleanAssunto = (assunto || "").toString().trim().toLowerCase();
+                
+                const proj = projects.find(p => {
+                    const pName = (p.name || "").toString().trim().toLowerCase();
+                    return pName === cleanProj;
+                });
                 if (!proj) return false;
-                return Array.isArray(proj.tasks) && proj.tasks.some(t => t.title === assunto);
+                
+                return Array.isArray(proj.tasks) && proj.tasks.some(t => {
+                    const tTitle = (t.title || "").toString().trim().toLowerCase();
+                    return tTitle === cleanAssunto;
+                });
             } catch (e) {
                 return false;
             }
@@ -1448,6 +1458,11 @@
             const ganttUrl = `http://localhost:5173/?${queryString}`;
             window.open(ganttUrl, "_blank");
         }
+
+        // Recarrega as validações de ícones ao retornar o foco para a aba do Andon
+        window.addEventListener("focus", function() {
+            filterTasks();
+        });
 
         // Inicializa a página no carregamento
         window.onload = loadStatus;
