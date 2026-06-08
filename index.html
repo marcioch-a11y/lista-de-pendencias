@@ -1181,9 +1181,14 @@
             const selectStatus = makeStatusSelectHtml(task.Status);
 
             const concluirBtn = `
-                <button class="toggle-btn btn-concluir-row" onclick="concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" style="padding: 3px 6px; font-size: 0.7rem; margin: 0 auto; display: block; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
-                    ✔
-                </button>
+                <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
+                    <button class="toggle-btn btn-concluir-row" onclick="concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" title="Concluir" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
+                        ✔
+                    </button>
+                    <button class="toggle-btn btn-gantt-row" onclick="addSingleTaskToGantt(this.closest('tr'))" title="Adicionar ao Cronograma" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; background: rgba(59, 130, 246, 0.08); border-radius: 6px;">
+                        📅
+                    </button>
+                </div>
             `;
 
             tr.innerHTML = `
@@ -1381,6 +1386,41 @@
         function openGanttForProject() {
             const projectSelected = document.getElementById("projectFilter").value;
             const ganttUrl = `http://localhost:5173/?importAndon=true&project=${encodeURIComponent(projectSelected)}`;
+            window.open(ganttUrl, "_blank");
+        }
+
+        // Abre o aplicativo de cronograma passando os dados de uma única tarefa
+        function addSingleTaskToGantt(rowEl) {
+            const taskId = rowEl.getAttribute("data-task-id") || "";
+            const assunto = rowEl.querySelector(".col-assunto").value;
+            const projeto = rowEl.querySelector(".col-projeto").value;
+            const problema = rowEl.querySelector(".col-problema").value;
+            
+            const selectedResps = [];
+            rowEl.querySelectorAll(".multiselect-dropdown input[type='checkbox']").forEach(cb => {
+                if (cb.checked) selectedResps.push(cb.value);
+            });
+            const responsavel = selectedResps.join(", ");
+            
+            const dueISO = rowEl.querySelector(".col-due").value;
+            const dueBR = formatISOToBR(dueISO);
+            const prioridade = rowEl.querySelector(".col-prioridade").value;
+            const status = rowEl.querySelector(".col-status").value;
+            
+            const taskParams = {
+                importSingle: "true",
+                id: taskId,
+                assunto: assunto,
+                projeto: projeto || "Sem Projeto",
+                problema: problema,
+                responsavel: responsavel,
+                due: dueBR,
+                prioridade: prioridade,
+                status: status
+            };
+            
+            const queryString = new URLSearchParams(taskParams).toString();
+            const ganttUrl = `http://localhost:5173/?${queryString}`;
             window.open(ganttUrl, "_blank");
         }
 

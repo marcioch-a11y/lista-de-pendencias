@@ -81,6 +81,10 @@ def main():
             # Se a tarefa possuir uma tarefa Pai, o nome do pai é obrigatoriamente o nome do projeto
             if task.get("parent_title"):
                 task_payload["projeto"] = task["parent_title"]
+                
+            # Se a tarefa estiver com estrelinha, a prioridade é forçada para 1
+            if task.get("starred"):
+                task_payload["prioridade"] = "1"
             
             # Print de progresso das informações extraídas
             print(f"  -> Assunto: '{task_payload['assunto']}'")

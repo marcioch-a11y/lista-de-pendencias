@@ -58,7 +58,8 @@ def get_pending_tasks(tasklist_id=config.TASKS_LIST_ID):
                 "id": item["id"],
                 "title": item.get("title", ""),
                 "notes": item.get("notes", ""),
-                "parent_title": parent_title
+                "parent_title": parent_title,
+                "starred": item.get("starred", False)
             })
             
     print(f"Total de tarefas pendentes filtradas para importação: {len(pending_tasks)}")

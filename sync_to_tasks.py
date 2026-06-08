@@ -99,7 +99,8 @@ def sync_sheets_to_tasks():
             # Monta o corpo da requisição de atualização
             task_body = {
                 "title": assunto,
-                "notes": notes_payload
+                "notes": notes_payload,
+                "starred": str(prioridade).strip() == "1"
             }
 
             # Configura a data se estiver no formato correto
