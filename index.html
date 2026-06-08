@@ -352,6 +352,12 @@
             vertical-align: middle;
             text-align: left;
         }
+        th {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            z-index: 10;
+        }
         tr:hover td {
             background: rgba(255, 255, 255, 0.02);
         }
@@ -597,10 +603,6 @@
                     <select id="projectFilter" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
                         <option value="all">Todos os Projetos</option>
                     </select>
-                    <!-- Botão para gerar cronograma -->
-                    <button class="toggle-btn" onclick="openGanttForProject()" style="padding: 8px 16px; border: 1px solid var(--accent-blue); color: #93c5fd; background: rgba(59,130,246,0.1); display: flex; align-items: center; gap: 6px;">
-                        📊 Gerar Cronograma
-                    </button>
                     <!-- Campo de Busca -->
                     <input type="text" id="taskSearch" placeholder="🔍 Buscar por Assunto..." oninput="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; width: 200px;">
                     <!-- Agrupador -->
@@ -627,7 +629,7 @@
                 </div>
             </div>
             
-            <div style="overflow-x: auto; margin-top: 10px; border: 1px solid var(--card-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
+            <div style="overflow-x: auto; overflow-y: auto; max-height: 650px; margin-top: 10px; border: 1px solid var(--card-border); border-radius: 12px; background: rgba(0,0,0,0.25);">
                 <table id="tasksTable">
                     <thead>
                         <tr style="background: rgba(255,255,255,0.02); color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">
@@ -783,6 +785,22 @@
                 return `${match[3]}/${match[2]}/${match[1]}`;
             }
             return dateStr;
+        }
+
+        // Verifica se a tarefa já foi importada no Cronograma (Gantt)
+        function isTaskInGantt(assunto, projeto) {
+            try {
+                const localData = localStorage.getItem('LeanGantt_Projects');
+                if (!localData) return false;
+                const projects = JSON.parse(localData);
+                if (!Array.isArray(projects)) return false;
+                const projName = projeto && projeto.trim() ? projeto.trim() : 'Sem Projeto';
+                const proj = projects.find(p => p.name === projName);
+                if (!proj) return false;
+                return proj.tasks.some(t => t.title === assunto);
+            } catch (e) {
+                return false;
+            }
         }
 
         // Função auxiliar para analisar e converter datas no formato DD/MM/YYYY ou ISO para objeto Date
@@ -1180,13 +1198,20 @@
             const selectPrio = makePrioritySelectHtml(task.prioridade);
             const selectStatus = makeStatusSelectHtml(task.Status);
 
+            const existsInGantt = isTaskInGantt(task.Assunto, task.Projeto);
+            const ganttBtnStyle = existsInGantt 
+                ? "border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; background: rgba(16, 185, 129, 0.12);" 
+                : "border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; background: rgba(59, 130, 246, 0.08);";
+            const ganttBtnTitle = existsInGantt ? "No Cronograma (Sincronizar novamente)" : "Adicionar ao Cronograma";
+            const ganttBtnIcon = existsInGantt ? "✅" : "📅";
+
             const concluirBtn = `
                 <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
                     <button class="toggle-btn btn-concluir-row" onclick="concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" title="Concluir" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
                         ✔
                     </button>
-                    <button class="toggle-btn btn-gantt-row" onclick="addSingleTaskToGantt(this.closest('tr'))" title="Adicionar ao Cronograma" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; background: rgba(59, 130, 246, 0.08); border-radius: 6px;">
-                        📅
+                    <button class="toggle-btn btn-gantt-row" onclick="addSingleTaskToGantt(this.closest('tr'))" title="${ganttBtnTitle}" style="padding: 3px 6px; font-size: 0.7rem; ${ganttBtnStyle} border-radius: 6px;">
+                        ${ganttBtnIcon}
                     </button>
                 </div>
             `;
