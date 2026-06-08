@@ -603,6 +603,10 @@
                     <select id="projectFilter" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
                         <option value="all">Todos os Projetos</option>
                     </select>
+                    <!-- Botão Gerar Cronograma -->
+                    <button class="toggle-btn" onclick="openGanttForProject()" style="padding: 8px 16px; border: 1px solid var(--accent-blue); color: #93c5fd; background: rgba(59,130,246,0.1); display: flex; align-items: center; gap: 6px;" title="Ver/Gerar cronograma deste projeto">
+                        📊 Gerar Cronograma
+                    </button>
                     <!-- Campo de Busca -->
                     <input type="text" id="taskSearch" placeholder="🔍 Buscar por Assunto..." oninput="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; width: 200px;">
                     <!-- Agrupador -->
@@ -655,6 +659,7 @@
 
     <script>
         let localTasksList = []; // Cache local para busca instantânea
+        let ganttProjectsCache = []; // Cache do Gantt vindo do backend para verificar anotações
 
         // Função para formatar a hora nos logs
         function getFormattedTime() {
@@ -710,26 +715,41 @@
                 });
         }
 
+        function loadGanttProjects() {
+            return fetch("/api/gantt/projects")
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data)) {
+                        ganttProjectsCache = data;
+                    }
+                })
+                .catch(err => {
+                    console.error("Erro ao carregar projetos do Gantt:", err);
+                });
+        }
+
         // Carrega as tarefas do Sheets
         function loadTasks() {
             const tbody = document.getElementById("tasksTableBody");
             tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 30px;">Atualizando quadro de tarefas...</td></tr>';
             
             loadOptions().then(() => {
-                fetch("/api/tasks")
-                    .then(r => r.json())
-                    .then(data => {
-                        // Filtra as pendências que NÃO estão concluídas
-                        localTasksList = data.filter(t => {
-                            const conc = (t.concluido || "").toString().toLowerCase().trim();
-                            return conc !== "sim";
+                loadGanttProjects().then(() => {
+                    fetch("/api/tasks")
+                        .then(r => r.json())
+                        .then(data => {
+                            // Filtra as pendências que NÃO estão concluídas
+                            localTasksList = data.filter(t => {
+                                const conc = (t.concluido || "").toString().toLowerCase().trim();
+                                return conc !== "sim";
+                            });
+                            populateProjectFilter(localTasksList);
+                            renderTasks(localTasksList);
+                        })
+                        .catch(err => {
+                            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-red); padding: 30px;">Erro ao carregar tarefas: ${err}</td></tr>`;
                         });
-                        populateProjectFilter(localTasksList);
-                        renderTasks(localTasksList);
-                    })
-                    .catch(err => {
-                        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-red); padding: 30px;">Erro ao carregar tarefas: ${err}</td></tr>`;
-                    });
+                });
             });
         }
 
@@ -790,10 +810,8 @@
         // Verifica se a tarefa já foi importada no Cronograma (Gantt)
         function isTaskInGantt(assunto, projeto, problema) {
             try {
-                const localData = localStorage.getItem('LeanGantt_Projects');
-                if (!localData) return false;
-                const projects = JSON.parse(localData);
-                if (!Array.isArray(projects)) return false;
+                const projects = ganttProjectsCache;
+                if (!projects || !Array.isArray(projects)) return false;
                 
                 const cleanProj = (projeto || "").toString().trim().toLowerCase() || "sem projeto";
                 const cleanAssunto = (assunto || "").toString().trim().toLowerCase();
@@ -1476,7 +1494,9 @@
 
         // Recarrega as validações de ícones ao retornar o foco para a aba do Andon
         window.addEventListener("focus", function() {
-            filterTasks();
+            loadGanttProjects().then(() => {
+                renderTasks(localTasksList);
+            });
         });
 
         // Inicializa a página no carregamento

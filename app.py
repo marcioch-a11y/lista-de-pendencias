@@ -21,6 +21,7 @@ def add_cors_headers(response):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DE_DADOS_PATH = os.path.join(BASE_DIR, "base_de_dados.md")
 CONFIG_PATH = os.path.join(BASE_DIR, "config.py")
+GANTT_PROJECTS_PATH = os.path.join(BASE_DIR, "gantt_projects.json")
 
 def get_local_ip():
     """Descobre o endereço IP local do computador na rede Wi-Fi/Ethernet."""
@@ -273,6 +274,32 @@ def api_concluir_task():
     if success:
         return jsonify({"success": True})
     return jsonify({"error": "Falha ao concluir a tarefa na planilha."}), 500
+
+# API: Retorna todos os projetos do Gantt para sincronização
+@app.route("/api/gantt/projects", methods=["GET"])
+def api_get_gantt_projects():
+    if not os.path.exists(GANTT_PROJECTS_PATH):
+        return jsonify([])
+    try:
+        with open(GANTT_PROJECTS_PATH, "r", encoding="utf-8") as f:
+            import json
+            return jsonify(json.load(f))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# API: Salva todos os projetos do Gantt para sincronização
+@app.route("/api/gantt/projects", methods=["POST"])
+def api_save_gantt_projects():
+    data = request.json
+    if not isinstance(data, list):
+        return jsonify({"error": "Os dados devem ser uma lista de projetos"}), 400
+    try:
+        with open(GANTT_PROJECTS_PATH, "w", encoding="utf-8") as f:
+            import json
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     # Garante a criação e migração das abas de apoio ao iniciar o servidor
