@@ -1,5 +1,13 @@
 import sys
 import os
+
+# Garante suporte a caracteres especiais no terminal do Windows (UTF-8)
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 from datetime import datetime
 from dotenv import load_dotenv
 

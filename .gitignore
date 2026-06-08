@@ -10,3 +10,8 @@ __pycache__/
 # Local system artifacts
 .system_generated/
 *.log
+
+# Local databases, caches, and scratch files
+clawdbot.db
+gantt_projects.json
+scratch/

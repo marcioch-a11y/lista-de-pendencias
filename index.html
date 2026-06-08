@@ -440,6 +440,10 @@
             background: rgba(0, 0, 0, 0.6);
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
         }
+        select option, .table-select option {
+            background-color: #1e293b;
+            color: #ffffff;
+        }
 
         /* Custom Multiselect styles */
         .multiselect-container {
@@ -515,6 +519,173 @@
             width: 16px;
             height: 16px;
         }
+        
+        /* Estilos de Status e Incerteza do Andon */
+        tr.status-alert {
+            background: rgba(239, 68, 68, 0.08) !important;
+            border-left: 3px solid #ef4444;
+        }
+        tr.status-warning {
+            background: rgba(245, 158, 11, 0.08) !important;
+            border-left: 3px solid #f59e0b;
+        }
+        tr.status-completed {
+            background: rgba(16, 185, 129, 0.03) !important;
+            opacity: 0.5;
+        }
+        .uncertain-field {
+            border: 1.5px dashed #f59e0b !important;
+            background: rgba(245, 158, 11, 0.05) !important;
+            border-radius: 6px;
+        }
+
+        /* Chat Sidebar Drawer */
+        .chat-sidebar {
+            position: fixed;
+            top: 0;
+            right: -360px; /* Hidden by default */
+            width: 360px;
+            height: 100vh;
+            background: #0d1321;
+            border-left: 1px solid var(--card-border);
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-sidebar.open {
+            right: 0;
+        }
+
+        .chat-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(20, 30, 55, 0.6);
+        }
+
+        .chat-header h3 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .chat-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 5px;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .chat-header .close-btn:hover {
+            color: var(--accent-red);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.1) transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .chat-msg {
+            padding: 10px 14px;
+            border-radius: 8px;
+            max-width: 85%;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .chat-msg.user {
+            align-self: flex-end;
+            background: var(--accent-blue);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-msg.ai {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            border-bottom-left-radius: 2px;
+        }
+
+        .chat-msg.system {
+            align-self: center;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-amber);
+            border: 1px dashed rgba(245, 158, 11, 0.3);
+            text-align: center;
+            max-width: 95%;
+            font-size: 0.85rem;
+        }
+
+        .chat-input-container {
+            padding: 12px;
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            gap: 8px;
+            background: rgba(20, 30, 55, 0.4);
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            background: #030712;
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-container input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .chat-input-container button {
+            background: var(--accent-blue);
+            border: none;
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .chat-input-container button:hover {
+            background: #2563eb;
+        }
+        .chat-input-container button:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
@@ -530,14 +701,28 @@
                 <button class="toggle-btn" id="toggleConfigBtn" onclick="toggleConfigPanel()" style="padding: 8px 16px; border: 1px solid var(--card-border); background: rgba(255,255,255,0.05); color: white; display: flex; align-items: center; gap: 6px;">
                     ⚙️ Configurações & Controles
                 </button>
+                <button class="toggle-btn" id="toggleChatBtn" onclick="toggleChatSidebar()" style="padding: 8px 16px; border: 1px solid var(--card-border); background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%); color: white; display: flex; align-items: center; gap: 6px; font-weight: 500;">
+                    💬 Chat Operacional
+                </button>
                 <div class="network-badge" id="localIpLabel">
                     Buscando rede...
                 </div>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <div class="content-grid hidden" id="configGrid">
+        <!-- Navegação de Abas Principal -->
+        <div class="tabs-container" style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--card-border); padding-bottom: 10px;">
+            <button class="toggle-btn active" id="tabAndonBtn" onclick="switchTab('andon')" style="padding: 10px 20px; font-size: 1rem; border-radius: 8px;">
+                📋 Quadro Andon Digital
+            </button>
+            <button class="toggle-btn" id="tabGanttBtn" onclick="switchTab('gantt')" style="padding: 10px 20px; font-size: 1rem; border-radius: 8px;">
+                📊 Cronograma Gantt
+            </button>
+        </div>
+
+        <div id="andonTabContent">
+            <!-- Main Content -->
+            <div class="content-grid hidden" id="configGrid">
             <!-- Coluna de Ações -->
             <div class="card">
                 <h2>⚡ Controles Rápidos</h2>
@@ -655,7 +840,15 @@
                 </table>
             </div>
         </div>
-    </div>
+        
+        </div> <!-- Fim de andonTabContent -->
+
+        <!-- Conteúdo do Cronograma Gantt -->
+        <div id="ganttTabContent" class="hidden" style="width: 100%; height: calc(100vh - 120px); margin-top: 10px;">
+            <iframe id="ganttIframe" src="" style="width: 100%; height: 100%; border: none; border-radius: 12px; background: rgba(0,0,0,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.5);"></iframe>
+        </div>
+        
+    </div> <!-- Fim de app-container -->
 
     <script>
         let localTasksList = []; // Cache local para busca instantânea
@@ -866,12 +1059,23 @@
 
         // Gera HTML do dropdown com a opção extra de cadastrar novo
         function makeSelectHtml(optionsList, currentValue, type, taskId) {
-            let html = `<select class="table-select col-${type}" onchange="handleSelectChange(this, '${type}', '${taskId}')">`;
+            const isUncertain = (type === "projeto" || type === "responsavel") && (!currentValue || !currentValue.toString().trim());
+            const uncertainClass = isUncertain ? " uncertain-field" : "";
+            let html = `<select class="table-select col-${type}${uncertainClass}" onchange="handleSelectChange(this, '${type}', '${taskId}')">`;
             html += `<option value="">[Vazio]</option>`;
+            
+            let valueFound = false;
             optionsList.forEach(opt => {
                 const selected = opt === currentValue ? "selected" : "";
+                if (selected) valueFound = true;
                 html += `<option value="${opt}" ${selected}>${opt}</option>`;
             });
+            
+            // Se o valor salvo existe mas não está nas opções cadastradas, adiciona-o temporariamente para não mostrar vazio
+            if (currentValue && !valueFound) {
+                html += `<option value="${currentValue}" selected>${currentValue}</option>`;
+            }
+            
             const titleMap = {
                 "projeto": "[+] Novo Projeto...",
                 "assunto": "[+] Novo Assunto..."
@@ -884,7 +1088,9 @@
         // Gera o HTML do widget de multi-seleção de responsáveis
         function makeMultiselectHtml(optionsList, currentValue, taskId) {
             const selectedNames = currentValue ? currentValue.split(",").map(n => n.trim()) : [];
-            let html = `<div class="multiselect-container" data-task-id="${taskId}">`;
+            const isUncertain = selectedNames.length === 0;
+            const uncertainClass = isUncertain ? " uncertain-field" : "";
+            let html = `<div class="multiselect-container${uncertainClass}" data-task-id="${taskId}">`;
             let displayLabel = selectedNames.length > 0 ? selectedNames.join(", ") : "[Vazio]";
             html += `<button class="multiselect-btn" onclick="toggleMultiselect(this, event)">${displayLabel}</button>`;
             html += `<div class="multiselect-dropdown hidden" onclick="event.stopPropagation()">`;
@@ -1228,6 +1434,17 @@
         function createRow(task) {
             const tr = document.createElement("tr");
             tr.setAttribute("data-task-id", task["ID Tarefa"]);
+            tr.setAttribute("data-sqlite-id", task.id || "");
+            
+            // Aplica estilos de cores com base no Status
+            const status = task.Status || "△";
+            if (status === "X") {
+                tr.className = "status-alert";
+            } else if (status === "△") {
+                tr.className = "status-warning";
+            } else if (status === "O") {
+                tr.className = "status-completed";
+            }
 
             const selectAssunto = makeSelectHtml(optionsCache.assuntos, task.Assunto, "assunto", task["ID Tarefa"]);
             const selectProjeto = makeSelectHtml(optionsCache.projetos, task.Projeto, "projeto", task["ID Tarefa"]);
@@ -1389,7 +1606,14 @@
             spinner.style.display = "inline-block";
             logToTerminal("Conectando ao Google Tasks e analisando novos lançamentos...");
             
-            fetch("/api/sync/to-sheets", { method: "POST" })
+            const isLocal = document.getElementById("providerLocal").classList.contains("active");
+            const provider = isLocal ? "local" : "gemini";
+            
+            fetch("/api/sync/to-sheets", { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ provider: provider })
+            })
                 .then(r => r.json())
                 .then(data => {
                     btn.disabled = false;
@@ -1450,46 +1674,46 @@
             }
         }
 
+        // Alternador de Abas Principal
+        function switchTab(tabName) {
+            const andonBtn = document.getElementById("tabAndonBtn");
+            const ganttBtn = document.getElementById("tabGanttBtn");
+            const andonContent = document.getElementById("andonTabContent");
+            const ganttContent = document.getElementById("ganttTabContent");
+            const ganttIframe = document.getElementById("ganttIframe");
+
+            if (tabName === "gantt") {
+                andonBtn.classList.remove("active");
+                ganttBtn.classList.add("active");
+                andonContent.classList.add("hidden");
+                ganttContent.classList.remove("hidden");
+                
+                if (!ganttIframe.src || ganttIframe.src === "about:blank") {
+                    ganttIframe.src = "/gantt/";
+                }
+            } else {
+                andonBtn.classList.add("active");
+                ganttBtn.classList.remove("active");
+                andonContent.classList.remove("hidden");
+                ganttContent.classList.add("hidden");
+            }
+        }
+
         // Abre o aplicativo de cronograma passando o projeto selecionado como parâmetro
         function openGanttForProject() {
             const projectSelected = document.getElementById("projectFilter").value;
-            const ganttUrl = `http://localhost:5173/?importAndon=true&project=${encodeURIComponent(projectSelected)}`;
-            window.open(ganttUrl, "_blank");
+            const ganttIframe = document.getElementById("ganttIframe");
+            ganttIframe.src = `/gantt/?project=${encodeURIComponent(projectSelected)}`;
+            switchTab('gantt');
         }
 
         // Abre o aplicativo de cronograma passando os dados de uma única tarefa
         function addSingleTaskToGantt(rowEl) {
-            const taskId = rowEl.getAttribute("data-task-id") || "";
-            const assunto = rowEl.querySelector(".col-assunto").value;
-            const projeto = rowEl.querySelector(".col-projeto").value;
-            const problema = rowEl.querySelector(".col-problema").value;
-            
-            const selectedResps = [];
-            rowEl.querySelectorAll(".multiselect-dropdown input[type='checkbox']").forEach(cb => {
-                if (cb.checked) selectedResps.push(cb.value);
-            });
-            const responsavel = selectedResps.join(", ");
-            
-            const dueISO = rowEl.querySelector(".col-due").value;
-            const dueBR = formatISOToBR(dueISO);
-            const prioridade = rowEl.querySelector(".col-prioridade").value;
-            const status = rowEl.querySelector(".col-status").value;
-            
-            const taskParams = {
-                importSingle: "true",
-                id: taskId,
-                assunto: assunto,
-                projeto: projeto || "Sem Projeto",
-                problema: problema,
-                responsavel: responsavel,
-                due: dueBR,
-                prioridade: prioridade,
-                status: status
-            };
-            
-            const queryString = new URLSearchParams(taskParams).toString();
-            const ganttUrl = `http://localhost:5173/?${queryString}`;
-            window.open(ganttUrl, "_blank");
+            const taskId = rowEl.getAttribute("data-sqlite-id") || "";
+            if (!taskId) return;
+            const ganttIframe = document.getElementById("ganttIframe");
+            ganttIframe.src = `/gantt/?id=${taskId}`;
+            switchTab('gantt');
         }
 
         // Recarrega as validações de ícones ao retornar o foco para a aba do Andon
@@ -1501,6 +1725,111 @@
 
         // Inicializa a página no carregamento
         window.onload = loadStatus;
+
+        // --- CHAT OPERACIONAL ---
+        function toggleChatSidebar() {
+            const sidebar = document.getElementById("chatSidebar");
+            sidebar.classList.toggle("open");
+            
+            // Foca no input se abrir
+            if (sidebar.classList.contains("open")) {
+                setTimeout(() => {
+                    document.getElementById("chatInput").focus();
+                }, 300);
+            }
+        }
+
+        function handleChatKeyDown(event) {
+            if (event.key === "Enter") {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById("chatInput");
+            const text = input.value.trim();
+            if (!text) return;
+            
+            // Limpa o input
+            input.value = "";
+            
+            // Adiciona a mensagem do usuário na tela
+            appendChatMessage("user", text);
+            
+            // Determina qual é o provedor selecionado na tela
+            const isLocal = document.getElementById("providerLocal").classList.contains("active");
+            const provider = isLocal ? "local" : "gemini";
+            
+            // Envia para a API do backend
+            fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text, provider: provider })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    appendChatMessage("system", `Erro: ${data.error}`);
+                } else {
+                    // Adiciona a resposta da IA na tela
+                    appendChatMessage("ai", data.message || "Ação processada com sucesso.");
+                    
+                    // Se houve alteração de dados via Function Calling, recarrega a tabela silenciosamente
+                    if (data.action_taken) {
+                        appendChatMessage("system", `Executando: ${data.action_taken.result}`);
+                        loadTasks(); // Atualiza a tabela Andon
+                    }
+                }
+            })
+            .catch(err => {
+                appendChatMessage("system", `Erro de rede: ${err}`);
+            });
+        }
+
+        function appendChatMessage(sender, text) {
+            const feed = document.getElementById("chatMessages");
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `chat-msg ${sender}`;
+            
+            if (sender === "user") {
+                msgDiv.innerHTML = `<strong>Você:</strong> ${escapeHtml(text)}`;
+            } else if (sender === "ai") {
+                msgDiv.innerHTML = `<strong>Clawdbot:</strong> ${escapeHtml(text)}`;
+            } else {
+                msgDiv.innerHTML = `<em>${escapeHtml(text)}</em>`;
+            }
+            
+            feed.appendChild(msgDiv);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
     </script>
+
+    <!-- Sidebar de Chat Operacional -->
+    <div class="chat-sidebar" id="chatSidebar">
+        <div class="chat-header">
+            <h3>💬 Chat Operacional</h3>
+            <button class="close-btn" onclick="toggleChatSidebar()">&times;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg ai">
+                <strong>Clawdbot:</strong> Olá! Sou seu Engenheiro de Operações. Como posso ajudar na gestão do Andon hoje?
+            </div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" placeholder="Digite uma mensagem..." onkeydown="handleChatKeyDown(event)">
+            <button id="btnSendChat" onclick="sendChatMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
+    </div>
 </body>
 </html>

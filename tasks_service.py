@@ -64,3 +64,15 @@ def get_pending_tasks(tasklist_id=config.TASKS_LIST_ID):
             
     print(f"Total de tarefas pendentes filtradas para importação: {len(pending_tasks)}")
     return pending_tasks
+
+def complete_task(task_id, tasklist_id=config.TASKS_LIST_ID):
+    """
+    Marca uma tarefa como concluída no Google Tasks.
+    """
+    print(f"Marcando tarefa {task_id[:10]}... como concluída no Google Tasks")
+    service = google_auth.get_service("tasks", "v1")
+    service.tasks().patch(
+        tasklist=tasklist_id,
+        task=task_id,
+        body={"status": "completed"}
+    ).execute()
