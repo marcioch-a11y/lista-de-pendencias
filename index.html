@@ -797,7 +797,7 @@
                 const projName = projeto && projeto.trim() ? projeto.trim() : 'Sem Projeto';
                 const proj = projects.find(p => p.name === projName);
                 if (!proj) return false;
-                return proj.tasks.some(t => t.title === assunto);
+                return Array.isArray(proj.tasks) && proj.tasks.some(t => t.title === assunto);
             } catch (e) {
                 return false;
             }
@@ -1206,11 +1206,11 @@
             const ganttBtnIcon = existsInGantt ? "✅" : "📅";
 
             const concluirBtn = `
-                <div style="display: flex; gap: 4px; justify-content: center; align-items: center;">
-                    <button class="toggle-btn btn-concluir-row" onclick="concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" title="Concluir" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
+                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                    <button type="button" class="toggle-btn btn-concluir-row" onclick="event.stopPropagation(); concluirRow('${task["ID Tarefa"]}', this.closest('tr'))" title="Concluir" style="padding: 3px 6px; font-size: 0.7rem; border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; background: rgba(16, 185, 129, 0.08); border-radius: 6px;">
                         ✔
                     </button>
-                    <button class="toggle-btn btn-gantt-row" onclick="addSingleTaskToGantt(this.closest('tr'))" title="${ganttBtnTitle}" style="padding: 3px 6px; font-size: 0.7rem; ${ganttBtnStyle} border-radius: 6px;">
+                    <button type="button" class="toggle-btn btn-gantt-row" onclick="event.stopPropagation(); addSingleTaskToGantt(this.closest('tr'))" title="${ganttBtnTitle}" style="padding: 3px 6px; font-size: 0.7rem; ${ganttBtnStyle} border-radius: 6px;">
                         ${ganttBtnIcon}
                     </button>
                 </div>
