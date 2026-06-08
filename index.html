@@ -597,6 +597,10 @@
                     <select id="projectFilter" onchange="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer;">
                         <option value="all">Todos os Projetos</option>
                     </select>
+                    <!-- Botão para gerar cronograma -->
+                    <button class="toggle-btn" onclick="openGanttForProject()" style="padding: 8px 16px; border: 1px solid var(--accent-blue); color: #93c5fd; background: rgba(59,130,246,0.1); display: flex; align-items: center; gap: 6px;">
+                        📊 Gerar Cronograma
+                    </button>
                     <!-- Campo de Busca -->
                     <input type="text" id="taskSearch" placeholder="🔍 Buscar por Assunto..." oninput="filterTasks()" style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; width: 200px;">
                     <!-- Agrupador -->
@@ -1371,6 +1375,13 @@
                 btn.classList.add("active");
                 btn.style.background = "var(--accent-blue)";
             }
+        }
+
+        // Abre o aplicativo de cronograma passando o projeto selecionado como parâmetro
+        function openGanttForProject() {
+            const projectSelected = document.getElementById("projectFilter").value;
+            const ganttUrl = `http://localhost:5173/?importAndon=true&project=${encodeURIComponent(projectSelected)}`;
+            window.open(ganttUrl, "_blank");
         }
 
         // Inicializa a página no carregamento
